@@ -68,6 +68,7 @@ async function run() {
       const updateDoc = {
         $set: user,
       };
+      // user
       const result = await userCollection.updateOne(filter, updateDoc, options);
       const token = jwt.sign(
         { email: email },
