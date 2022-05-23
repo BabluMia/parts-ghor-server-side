@@ -39,7 +39,7 @@ async function run() {
     const userCollection = client.db("PartsGhor").collection("users");
     const reviewCollection = client.db("PartsGhor").collection("reviews");
     const profileCollection = client.db("PartsGhor").collection("profile");
-    console.log("connect to dbDoctor");
+    console.log("connect to partsGhor");
 
     app.get("/products", async (req, res) => {
       const query = {};
@@ -62,9 +62,8 @@ async function run() {
     // user collection
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
-      const displayName = req.params.displayName
       const user = req.body;
-      const filter = { email: email ,displayName:displayName};
+      const filter = { email: email };
       const options = { upsert: true };
       const updateDoc = {
         $set: user,
@@ -72,10 +71,24 @@ async function run() {
       const result = await userCollection.updateOne(filter, updateDoc, options);
       const token = jwt.sign(
         { email: email },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "24h" }
+        process.env.ACCESS_TOKEN_SECRET
+       
       );
       res.send({ result, token });
+
+    });
+
+    // add review 
+    app.post("/reviews", async (req, res) => {
+      const result = await reviewCollection.insertOne(req.body);
+      // console.log(req.body);
+      res.send(result);
+      // console.log(result);
+    });
+    // get review 
+    app.get("/reviews",  async (req, res) => {
+      const reviews = await reviewCollection.find().toArray();
+      res.send(reviews);
     });
   } finally {
   }
