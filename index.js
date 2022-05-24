@@ -38,7 +38,7 @@ async function run() {
     const productCollection = client.db("PartsGhor").collection("products");
     const userCollection = client.db("PartsGhor").collection("users");
     const reviewCollection = client.db("PartsGhor").collection("reviews");
-    const profileCollection = client.db("PartsGhor").collection("profile");
+    const orderCollection = client.db("PartsGhor").collection("orders");
 
 
     console.log("connect to partsGhor");
@@ -83,6 +83,13 @@ async function run() {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
+    app.get("/user/:email",  async (req, res) => {
+
+      const email = req.params.email;
+      const query = { email:email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
     // user collection
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
@@ -114,6 +121,21 @@ async function run() {
     app.get("/reviews",  async (req, res) => {
       const reviews = await reviewCollection.find().toArray();
       res.send(reviews);
+    });
+    // order Collection 
+    app.post("/orders", async (req, res) => {
+      const result = await orderCollection.insertOne(req.body);
+      res.send(result);
+    });
+    app.get("/orders", async (req, res) => {
+      const result = await orderCollection.find().toArray();
+      res.send(result);
+    });
+    app.get("/orders/:email", async (req, res) => {
+      const email = req.params.email
+      const query = { email:email };
+      const result = await orderCollection.findOne(query);
+      res.send(result);
     });
   } finally {
   }
