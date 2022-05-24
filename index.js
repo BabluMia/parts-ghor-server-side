@@ -39,7 +39,24 @@ async function run() {
     const userCollection = client.db("PartsGhor").collection("users");
     const reviewCollection = client.db("PartsGhor").collection("reviews");
     const profileCollection = client.db("PartsGhor").collection("profile");
+
+
     console.log("connect to partsGhor");
+
+
+    const verifyAdmin = async (req, res, next) => {
+      const requester = req.decoded?.email;
+      const requesterAccount = await userCollection.findOne({
+        email: requester,
+      });
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        res.status(403).send({ message: "Forbidden access" });
+      }
+    };
+
+    
 
     app.get("/products", async (req, res) => {
       const query = {};
@@ -47,6 +64,13 @@ async function run() {
       const products = await cursor.toArray();
       res.send(products);
     });
+    // post product 
+    app.post('/products',async (req,res)=>{
+      const product = req.body;
+      
+      const result = await productCollection.insertOne(product);
+      return res.send({ success: true, result });
+    })
     app.get("/product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
