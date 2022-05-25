@@ -40,9 +40,7 @@ async function run() {
     const reviewCollection = client.db("PartsGhor").collection("reviews");
     const orderCollection = client.db("PartsGhor").collection("orders");
 
-
     console.log("connect to partsGhor");
-
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded?.email;
@@ -56,23 +54,21 @@ async function run() {
       }
     };
 
-    
-
     app.get("/products", async (req, res) => {
       const query = {};
       const cursor = productCollection.find(query);
       const products = await cursor.toArray();
       res.send(products);
     });
-    // post product 
-    app.post('/products',async (req,res)=>{
+    // post product
+    app.post("/products", async (req, res) => {
       const product = req.body;
-      
+
       const result = await productCollection.insertOne(product);
       return res.send({ success: true, result });
-    })
+    });
     // update product
-    app.put('/product/:id',async (req,res)=>{
+    app.put("/product/:id", async (req, res) => {
       const id = req.params.id;
       const data = req.body.quantity;
       const filter = { _id: ObjectId(id) };
@@ -82,13 +78,9 @@ async function run() {
           quantity: data,
         },
       };
-      const result = await productCollection.updateOne(
-        filter,
-        updatedDoc,
-        
-      );
+      const result = await productCollection.updateOne(filter, updatedDoc);
       res.send(result);
-    })
+    });
     app.get("/product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -96,19 +88,18 @@ async function run() {
       res.send(product);
     });
 
-    // get  all user
+    //---------------- get  all user-----------------
     app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
-    app.get("/user/:email",  async (req, res) => {
-
+    app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { email:email };
+      const query = { email: email };
       const result = await userCollection.findOne(query);
       res.send(result);
     });
-    // user collection
+    //-------------------------- user collection----------------
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
       const user = req.body;
@@ -119,28 +110,42 @@ async function run() {
       };
       // user
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      const token = jwt.sign(
-        { email: email },
-        process.env.ACCESS_TOKEN_SECRET
-       
-      );
+      const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET);
       res.send({ result, token });
-
     });
 
-    // add review 
+    // ---------------------admin-------------------
+    app.get("/admin/:email",verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
+
+    app.put("/user/admin/:email",verifyJWT,verifyAdmin,  async (req, res) => {
+      //verifyJWT, verifyAdmin,
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: "admin" },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // -------------------------add review -----------------------------
     app.post("/reviews", async (req, res) => {
       const result = await reviewCollection.insertOne(req.body);
       // console.log(req.body);
       res.send(result);
       // console.log(result);
     });
-    // get review 
-    app.get("/reviews",  async (req, res) => {
+    // get review
+    app.get("/reviews", async (req, res) => {
       const reviews = await reviewCollection.find().toArray();
       res.send(reviews);
     });
-    // order Collection 
+    // order Collection
     app.post("/orders", async (req, res) => {
       const result = await orderCollection.insertOne(req.body);
       res.send(result);
@@ -149,13 +154,20 @@ async function run() {
       const result = await orderCollection.find().toArray();
       res.send(result);
     });
-    app.get('/order',async(req,res)=>{
+    app.get("/order",verifyJWT, async (req, res) => {
       const email = req.query.email;
-      const query={email:email}
-      const cursor = orderCollection.find(query);
-      const orders = await cursor.toArray();
-      res.send(orders)
-    })
+      const authorization = req.headers.authorization;
+      // console.log(authorization);
+      const decodedEmail = req.decoded.email;
+      if (email === decodedEmail) {
+        const query = { email: email };
+        const cursor = orderCollection.find(query);
+        const orders = await cursor.toArray();
+        res.send(orders);
+      }else {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+    });
   } finally {
   }
 }
