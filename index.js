@@ -6,6 +6,8 @@ const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 // middlewere
 app.use(express.json());
 app.use(cors());
@@ -39,6 +41,7 @@ async function run() {
     const userCollection = client.db("PartsGhor").collection("users");
     const reviewCollection = client.db("PartsGhor").collection("reviews");
     const orderCollection = client.db("PartsGhor").collection("orders");
+    const paymentCollection = client.db('PartsGhor').collection('payments');
 
     console.log("connect to partsGhor");
 
@@ -58,8 +61,8 @@ async function run() {
 
     app.post('/create-payment-intent', verifyJWT, async(req, res) =>{
       const service = req.body;
-      const price = service.price;
-      const amount = price*100;
+      const price = service.totalAmount;
+      const amount = price;
       const paymentIntent = await stripe.paymentIntents.create({
         amount : amount,
         currency: 'usd',
@@ -189,6 +192,28 @@ async function run() {
       const result = await orderCollection.deleteOne(query);
       res.json(result);
     });
+    app.get("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await orderCollection.findOne(query);
+      res.json(result);
+    });
+    app.patch('/orders/:id', verifyJWT, async(req, res) =>{
+      const id  = req.params.id;
+      const payment = req.body;
+      const filter = {_id: ObjectId(id)};
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId
+        }
+      }
+
+      const result = await paymentCollection.insertOne(payment);
+      const updatedBooking = await orderCollection.updateOne(filter, updatedDoc);
+      res.send(updatedBooking);
+    })
+
   } finally {
   }
 }
