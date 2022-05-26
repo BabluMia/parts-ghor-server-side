@@ -105,6 +105,15 @@ async function run() {
       res.send(product);
     });
 
+    // product delete
+
+    app.delete("/product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
+      res.json(result);
+    });
+
     //---------------- get  all user-----------------
     app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
