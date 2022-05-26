@@ -112,9 +112,10 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const result = await productCollection.deleteOne(query);
       res.json(result);
+      
     });
 
-    //---------------- get  all user-----------------
+    //---------------- get  all user in page -----------------
     app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
