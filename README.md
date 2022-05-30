@@ -5,11 +5,8 @@
 ## Firebase Live Link [See ](https://parts-ghor.web.app/).
 
 
-## Clint Side Repo [See Github](https://github.com/programming-hero-web-course1/manufacturer-website-client-side-BabluMia).
 
-
-
-## Server Side Repo [See Github](https://github.com/programming-hero-web-course1/manufacturer-website-server-side-BabluMia).
+## Server Side Repo [See Github](https://github.com/BabluMia/parts-ghor-server-side).
 
 
 
